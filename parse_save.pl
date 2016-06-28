@@ -17,10 +17,15 @@ my ($file, @keys) = @ARGV;
 
 open(FILE, '<', $file) or die("Unable to open file: '$file'\n");
 
-my $save = <FILE>;
-close(FILE);
-unless(defined($save)) {
-    die("Failed to read from file: '$file'");
+my $save;
+{
+    # undefine input file separator in this block;
+    local $/;
+    $save = <FILE>;
+    close(FILE);
+    unless(defined($save)) {
+        die("Failed to read from file: '$file'");
+    }
 }
 chomp($save);
 
