@@ -6,21 +6,32 @@ COL_LAST_TRANS=4
 COL_HS_PER_MIN=6
 
 if (( $# < 1 )); then
-    echo >&2 "Usage: $0 <TRANSCENSION>"
+    echo >&2 "Usage: $0 <TRANSCENSION> [ASCENSION]"
     exit 1
 fi
 transcension=$1
-if [[ $transcension =~ ^[0-9]\+$ ]]; then
-    echo >&2 "Not a valid number: '$transcension'"
+ascension=$2
+if [[ ! $transcension =~ ^[0-9]+$ ]]; then
+    echo >&2 "Not a valid transcension number: '$transcension'"
+    exit 1
+fi
+
+if [[ -n $ascension && ! $ascension =~ ^[0-9]+$ ]]; then
+    echo >&2 "Not a valid ascension number: '$ascension'"
     exit 1
 fi
 
 dir=./live_plots
 [[ -d $dir ]] || exit 1
 
+regex="^$transcension "
+if [[ -n $ascension ]]; then
+    regex="$regex$ascension "
+fi
+
 all_data=$(find "$dir" -type f -exec \
-           grep -Z -l -m 1 "^$transcension " {} \+ | xargs -0 cat)
-plot_data=$(echo "$all_data" | sed -n "/^$transcension /p")
+           grep -Z -l -m 1 "$regex" {} \+ | xargs -0 cat)
+plot_data=$(echo "$all_data" | sed -n "/$regex/p")
 ascensions=($(echo "$plot_data" | cut -d' ' -f 2 | sort -n | uniq))
 
 if (( ${#ascensions[@]} == 0 )); then
@@ -44,8 +55,13 @@ xranges=$(echo "$all_data" | sed -n -e '/^set xrange/p' | sed 's/[^[]\+\[\([^:]\
 xrange_beg=$(echo "$xranges" | sort -k 1,1n | head -n 1 | cut -d' ' -f 1)
 xrange_end=$(echo "$xranges" | sort -k 2,2n | tail -n 1 | cut -d' ' -f 2)
 
+title="Transcension $transcension"
+if [[ -n $ascension ]]; then
+    title="$title, Ascension $ascension"
+fi
+
 plot=$(cat <<EOF
-set title "Transcension $transcension"
+set title "$title"
 set grid
 set xlabel "Time Since Last Transcension (min)"
 set ylabel "HS/min (Transcension)"
