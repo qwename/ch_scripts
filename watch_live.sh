@@ -74,7 +74,10 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
     fi
     ascensions=$current_ascensions
 
-    xrange_beg=$(($(echo "$first_line" | cut -d' ' -f 4 | sed "s/\..*//") - 1))
+    xrange_beg=$(echo "$first_line" | cut -d' ' -f 4 | sed "s/\..*//")
+    if (( $xrange_beg > 0 )); then
+        xrange_beg=$((xrange_beg - 1))
+    fi
     xrange_end=$(($(echo "$last_line" | cut -d' ' -f 4 | sed "s/\..*//") + 5))
     if (( $xrange_end - $xrange_beg < 30 )); then
         xrange_end=$(($xrange_beg + 30));
