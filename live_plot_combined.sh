@@ -53,7 +53,8 @@ set y2label "HZE"
 set y2tics
 set autoscale
 set xrange [$xrange_beg:$xrange_end]
-set nokey
+#set nokey
+set key left top
 $plot_str
 EOF
 )
@@ -61,7 +62,7 @@ EOF
 for ascends in ${ascensions[@]}; do
     cols=$((COL_ASCENDS-1))
     ascends_data=$(echo "$plot_data" | \
-                         sed -n "/^\([^ ]\+ \+\)\{$cols\}$ascends/p")
+                         sed -n "/^\([^ ]\+ \+\)\{$cols\}$ascends /p")
     plot=$plot$'\n'$ascends_data$'\n'e
     for p in "${more_plots[@]}"; do
         plot=$plot$'\n'$ascends_data$'\n'e
