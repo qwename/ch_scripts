@@ -4,6 +4,7 @@
 - Bash 4 (4.2.26)
 - inotiywait (package inotify-tools 3.14)
 - gnuplot (4.6)
+- grep (GNU grep 2.20)
 - sed (GNU sed 4.2.2)
 - tr (8.22)
 
