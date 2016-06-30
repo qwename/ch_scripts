@@ -5,17 +5,29 @@ COL_HZE=3
 COL_LAST_TRANS=4
 COL_HS_PER_MIN=6
 
+usage() {
+    cat <<EOF
+Usage: $0 <TRANSCENSION> [ASCENSION=*] [XRANGE-BEG] [XRANGE-END]
+EOF
+}
+
 if (( $# < 1 )); then
-    echo >&2 "Usage: $0 <TRANSCENSION> [ASCENSION]"
+    usage >&2
     exit 1
 fi
 transcension=$1
 ascension=$2
+xrange_beg=$3
+xrange_end=$4
+
 if [[ ! $transcension =~ ^[0-9]+$ ]]; then
     echo >&2 "Not a valid transcension number: '$transcension'"
     exit 1
 fi
 
+if [[ $ascension =~ ^\*$ ]]; then
+    ascension=
+fi
 if [[ -n $ascension && ! $ascension =~ ^[0-9]+$ ]]; then
     echo >&2 "Not a valid ascension number: '$ascension'"
     exit 1
@@ -31,7 +43,7 @@ fi
 
 all_data=$(find "$dir" -type f -exec \
            grep -Z -l -m 1 "$regex" {} \+ | xargs -0 cat)
-plot_data=$(echo "$all_data" | sed -n "/$regex/p")
+plot_data=$(echo "$all_data" | sed -n "/$regex/p" | sort -k1n -k2n -k3n | uniq)
 ascensions=($(echo "$plot_data" | cut -d' ' -f 2 | sort -n | uniq))
 
 if (( ${#ascensions[@]} == 0 )); then
@@ -52,8 +64,12 @@ plot_str="plot $(echo ${ascensions[@]} | \
                  sed -e "s|\([0-9]\+\)|$plots|g" -e "s/, $//")"
 
 xranges=$(echo "$all_data" | sed -n -e '/^set xrange/p' | sed 's/[^[]\+\[\([^:]\+\):\([^]]\+\).*/\1 \2/')
-xrange_beg=$(echo "$xranges" | sort -k 1,1n | head -n 1 | cut -d' ' -f 1)
-xrange_end=$(echo "$xranges" | sort -k 2,2n | tail -n 1 | cut -d' ' -f 2)
+if [[ -z $xrange_beg ]]; then
+    xrange_beg=$(echo "$xranges" | sort -k 1,1n | head -n 1 | cut -d' ' -f 1)
+fi
+if [[ -z $xrange_end ]]; then
+    xrange_end=$(echo "$xranges" | sort -k 2,2n | tail -n 1 | cut -d' ' -f 2)
+fi
 
 title="Transcension $transcension"
 if [[ -n $ascension ]]; then
@@ -77,8 +93,8 @@ EOF
 
 for ascends in ${ascensions[@]}; do
     cols=$((COL_ASCENDS-1))
-    ascends_data=$(echo "$plot_data" | \
-                         sed -n "/^\([^ ]\+ \+\)\{$cols\}$ascends /p")
+    re_ascends="^\([^ ]\+ \+\)\{$cols\}$ascends "
+    ascends_data=$(echo "$plot_data" | sed -n "/$re_ascends/p")
     plot=$plot$'\n'$ascends_data$'\n'e
     for p in "${more_plots[@]}"; do
         plot=$plot$'\n'$ascends_data$'\n'e
