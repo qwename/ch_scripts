@@ -1,8 +1,9 @@
 #!/bin/bash
 
-COL_ASCENDS=2
+COL_T=1
+COL_A=2
 COL_HZE=3
-COL_LAST_TRANS=4
+COL_LAST_T=4
 COL_HS_PER_MIN=6
 
 usage() {
@@ -36,26 +37,30 @@ fi
 dir=./live_plots
 [[ -d $dir ]] || exit 1
 
-regex="^$transcension "
-if [[ -n $ascension ]]; then
-    regex="$regex$ascension "
+regex="^[0-9]"
+if [[ -n $transcension ]]; then
+    regex="^$transcension "
+    if [[ -n $ascension ]]; then
+        regex="$regex$ascension "
+    fi
 fi
 
 all_data=$(find "$dir" -type f -exec \
            grep -Z -l -m 1 "$regex" {} \+ | xargs -0 cat)
 plot_data=$(echo "$all_data" | sed -n "/$regex/p" | sort -k1n -k2n -k3n | uniq)
-ascensions=($(echo "$plot_data" | cut -d' ' -f 2 | sort -n | uniq))
+transcensions=($(echo "$plot_data" | cut -d' ' -f $COL_T | sort -n | uniq))
+ascensions=($(echo "$plot_data" | cut -d' ' -f $COL_A | sort -n | uniq))
 
 if (( ${#ascensions[@]} == 0 )); then
     echo >&2 "No ascensions found"
     exit 1
 fi
 
-plot1="'-' u $COL_LAST_TRANS:$COL_HS_PER_MIN w lp title 'HS/min, \1 Ascensions' axes x1y1"
+plot1="'-' u $COL_LAST_T:$COL_HS_PER_MIN w lp title 'HS/min, \1 Ascensions' axes x1y1"
 plots="$plot1, "
 
-plot2="'-' u $COL_LAST_TRANS:$COL_HZE w lp title 'HZE, \1 Ascensions' axes x1y2"
-more_plots=() #("$plot2")
+plot2="'-' u $COL_LAST_T:$COL_HZE w l title 'HZE, \1 Ascensions' axes x1y2"
+more_plots=("$plot2")
 for p in "${more_plots[@]}"; do
     plots="$plots$p, "
 done
@@ -92,7 +97,7 @@ EOF
 )
 
 for ascends in ${ascensions[@]}; do
-    cols=$((COL_ASCENDS-1))
+    cols=$((COL_A-1))
     re_ascends="^\([^ ]\+ \+\)\{$cols\}$ascends "
     ascends_data=$(echo "$plot_data" | sed -n "/$re_ascends/p")
     plot=$plot$'\n'$ascends_data$'\n'e
