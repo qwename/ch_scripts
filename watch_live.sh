@@ -40,13 +40,20 @@ backup_file "$plot_file"
 ascensions=
 while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
     retries=0
+    temp_data=
     while (( $retries < 3)); do
         output=$("$stats_script"  <("$lso_script" "$lso_file") 2>&1)
         echo "$output" | sed -n "2,\$p"
 
         current_data=$(echo "$output" | sed -n "1p")
-        first_line=$(echo "$current_data" | sed -n "1p")
-        last_line=$(echo "$current_data" | sed -n "$ p")
+        if [[ -z $plot_data ]]; then
+            temp_data=$current_data
+        else
+            temp_data=$plot_data$'\n'$current_data
+        fi
+
+        first_line=$(echo "$temp_data" | sed -n "1p")
+        last_line=$(echo "$temp_data" | sed -n "$ p")
 
         if [[ $last_line =~ ^Failed ]]; then
             echo >&2 "$last_line"
@@ -68,7 +75,9 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
         if [[ -n $ascensions ]] && [[ $ascensions != $current_ascensions ]]; then
             echo "Ascension counts differ: $ascensions != $current_ascensions"
             backup_file "$plot_file"
-            plot_data=
+            temp_data=$current_data
+            first_line=$(echo "$current_data" | sed -n "1p")
+            last_line=$(echo "$current_data" | sed -n "$ p")
         fi
         ascensions=$current_ascensions
 
@@ -79,11 +88,7 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
         continue
     fi
 
-    if [[ -z $plot_data ]]; then
-        plot_data=$current_data
-    else
-        plot_data=$plot_data$'\n'$current_data
-    fi
+    plot_data=$temp_data
 
     xrange_beg=$(echo "$first_line" | cut -d' ' -f 4 | sed "s/\..*//")
     if (( $xrange_beg > 0 )); then
