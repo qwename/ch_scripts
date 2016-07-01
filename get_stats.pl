@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use bigint;
 use Math::BigFloat ':constant';
+use POSIX;
 
 if (scalar(@ARGV) < 1) {
     die("Usage: $0 <FILE>\n");
@@ -15,7 +16,7 @@ my @keys = (
     "numberOfTranscensions", "transcensionTimestamp",
     "numAscensionsThisTranscension", "startTimestamp",
     "unixTimestamp", "primalSouls", "totalHeroSoulsFromAscensions",
-    "highestFinishedZone",
+    "highestFinishedZone", "heroSoulsSacrificed",
     );
 
 my $command = "./parse_save.pl \"$file\" " . join(' ', @keys);
@@ -41,14 +42,29 @@ my $msSinceAscend = $stats{unixTimestamp} - $stats{startTimestamp};
 my $minSinceTranscend = $msSinceTranscend / 1000.0 / 60;
 my $minSinceAscend = $msSinceAscend / 1000.0 / 60;
 
-my $transcendHSPerMin = ($stats{totalHeroSoulsFromAscensions} +
-                         $stats{primalSouls}) / $minSinceTranscend;
+my $totalHSInclAscends = $stats{totalHeroSoulsFromAscensions} +
+                         $stats{primalSouls};
+my $transcendHSPerMin = $totalHSInclAscends / $minSinceTranscend;
 my $ascendHSPerMin = $stats{primalSouls} / $minSinceAscend;
+
+my $currentAS = HSToAS($stats{heroSoulsSacrificed});
+my $transcendAS = HSToAS($stats{totalHeroSoulsFromAscensions} +
+                         $stats{primalSouls});
+my $addAS = $transcendAS - $currentAS;
+if ($addAS < 0) {
+    $addAS = 0;
+}
 
 print <<"EOF";
 Transcension HS/min: $transcendHSPerMin
 Ascension HS/min: $ascendHSPerMin
+Ancient Souls: $currentAS (+$addAS)
 EOF
+
+sub HSToAS {
+    my ($hs) = @_;
+    return POSIX::floor("5" * POSIX::log10($hs));
+}
 
 sub formatFloat {
     my ($x, $decimals) = @_;
@@ -64,6 +80,10 @@ my $plot = "$stats{numberOfTranscensions} " .
            formatFloat($minSinceTranscend) .
            formatFloat($minSinceAscend) .
            "$transcendHSPerMin " .
-           "$ascendHSPerMin";
+           "$ascendHSPerMin " .
+           "$stats{heroSoulsSacrificed} " .
+           "$totalHSInclAscends " .
+           "$transcendAS " .
+           "$addAS";
 
 print STDERR "$plot\n";
