@@ -45,14 +45,9 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
         echo "$output" | sed -n "2,\$p"
 
         current_data=$(echo "$output" | sed -n "1p")
-        if [[ -z $plot_data ]]; then
-            plot_data=$current_data
-        else
-            plot_data=$plot_data$'\n'$current_data
-        fi
+        first_line=$(echo "$current_data" | sed -n "1p")
+        last_line=$(echo "$current_data" | sed -n "$ p")
 
-        first_line=$(echo "$plot_data" | sed -n "1p")
-        last_line=$(echo "$plot_data" | sed -n "$ p")
         if [[ $last_line =~ ^Failed ]]; then
             echo >&2 "$last_line"
             echo >&2 "Retrying $retries more times"
@@ -73,7 +68,7 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
             fi
             echo "Ascension counts differ: $ascensions != $current_ascensions"
             backup_file "$plot_file"
-            plot_data=$current_data
+            plot_data=
         fi
         ascensions=$current_ascensions
 
@@ -84,6 +79,11 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
         continue
     fi
 
+    if [[ -z $plot_data ]]; then
+        plot_data=$current_data
+    else
+        plot_data=$plot_data$'\n'$current_data
+    fi
 
     xrange_beg=$(echo "$first_line" | cut -d' ' -f 4 | sed "s/\..*//")
     if (( $xrange_beg > 0 )); then
