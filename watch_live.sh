@@ -60,19 +60,30 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
             sleep 1
             continue
         fi
+
+        current_ascensions=$(echo "$last_line" | cut -d' ' -f 2)
+        if [[ -n $ascensions ]] && [[ $ascensions != $current_ascensions ]]; then
+            # Might have to fix script
+            if [[ ! $ascensions =~ ^[0-9]+$ ]]; then
+                echo >&2 "Invalid ascension value: '$ascensions'"
+                echo >&2 "Retrying $retries more times"
+                retries=$(($retries + 1))
+                sleep 1
+                continue
+            fi
+            echo "Ascension counts differ: $ascensions != $current_ascensions"
+            backup_file "$plot_file"
+            plot_data=$current_data
+        fi
+        ascensions=$current_ascensions
+
+        retries=0
         break
     done
     if (( $retries == 3 )); then
         continue
     fi
 
-    current_ascensions=$(echo "$last_line" | cut -d' ' -f 2)
-    if [[ -n $ascensions ]] && [[ $ascensions != $current_ascensions ]]; then
-        echo "Ascension counts differ: $ascensions != $current_ascensions"
-        backup_file "$plot_file"
-        plot_data=$current_data
-    fi
-    ascensions=$current_ascensions
 
     xrange_beg=$(echo "$first_line" | cut -d' ' -f 4 | sed "s/\..*//")
     if (( $xrange_beg > 0 )); then
