@@ -50,12 +50,21 @@ fi
 plot_data=$(grep "$regex" "$file")
 transcensions=($(echo "$plot_data" | cut -d' ' -f $COL_T | sort -n | uniq))
 ascensions=($(echo "$plot_data" | cut -d' ' -f $COL_A | sort -n | uniq))
+
 addOneAS=$(echo "$plot_data" | \
-           cut -d' ' -f $COL_A,$COL_CURRENT_AS,$COL_ADD_AS | \
-           sort -k 1,1n -k 3,3n | \
-           sed -n '/^\([0-9]\+ \)\{2\}1$/p')
-addOneAS_x=($(echo "$addOneAS" | cut -d' ' -f 1))
-addOneAS_y=($(echo "$addOneAS" | cut -d' ' -f 2))
+           cut -d' ' -f $COL_T,$COL_A,$COL_CURRENT_AS,$COL_ADD_AS | \
+           sort -k 1,1n -k 3,3n)
+addOneAS_x=()
+addOneAS_y=()
+for transcends in ${transcensions[@]}; do
+    line=$(echo "$addOneAS" | \
+           sed -n "/^$transcends \([0-9]\+ \+\)\{2\}[^0]/p" | head -n 1)
+    addOneAS_x+=($(echo "$line" | cut -d' ' -f 2))
+    addOneAS_y+=($(echo "$line" | cut -d' ' -f 3))
+done
+#           sed -n '/^\([0-9]\+ \)\{2\}[^0]$/p')
+#addOneAS_x=($(echo "$addOneAS" | cut -d' ' -f 1))
+#addOneAS_y=($(echo "$addOneAS" | cut -d' ' -f 2))
 
 if (( ${#transcensions[@]} == 0 )); then
     echo >&2 "No transcensions found"
