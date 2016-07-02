@@ -50,7 +50,10 @@ my $ascendHSPerMin = $stats{primalSouls} / $minSinceAscend;
 my $currentAS = HSToAS($stats{heroSoulsSacrificed});
 my $transcendAS = HSToAS($stats{totalHeroSoulsFromAscensions} +
                          $stats{primalSouls});
-my $addAS = $transcendAS - $currentAS;
+my $nextAS = HSToAS($stats{heroSoulsSacrificed} +
+                    $stats{totalHeroSoulsFromAscensions} +
+                    $stats{primalSouls});
+my $addAS = $nextAS - $currentAS;
 if ($addAS < 0) {
     $addAS = 0;
 }
