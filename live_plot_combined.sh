@@ -90,8 +90,8 @@ set y2label "HZE"
 set y2tics
 set autoscale
 set xrange [$xrange_beg:$xrange_end]
-#set nokey
 set key left top
+#set nokey
 $plot_str
 EOF
 )

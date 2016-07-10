@@ -90,21 +90,30 @@ while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
 
     plot_data=$temp_data
 
-    xrange_beg=$(echo "$first_line" | cut -d' ' -f 4 | sed "s/\..*//")
+    x_beg=$(echo "$first_line" | cut -d' ' -f 4)
+    x_end=$(echo "$last_line" | cut -d' ' -f 4)
+    diff=$(perl -e "print ($x_end-$x_beg)")
+
+    xrange_beg=$(echo "$x_beg" | sed "s/\..*//")
     if (( $xrange_beg > 0 )); then
         xrange_beg=$((xrange_beg - 1))
     fi
-    xrange_end=$(($(echo "$last_line" | cut -d' ' -f 4 | sed "s/\..*//") + 5))
+    xrange_end=$(($(echo "$x_end" | sed "s/\..*//") + 5))
     if (( $xrange_end - $xrange_beg < 30 )); then
         xrange_end=$(($xrange_beg + 30));
     fi
 
     yrange_beg=$(echo "$first_line" | cut -d' ' -f 6 | sed "s/.\..*//")
     yrange_end=$(echo "$last_line" | cut -d' ' -f 6 | sed "s/\..*//")0
+
+    title="$ascensions Ascensions, $diff minutes"
+
     swap="${plot_file}.swp"
     cat <<EOF >"$swap"
+set title "$title"
 set grid
 set xlabel "Time Since Last Transcension (min)"
+set ytics nomirror
 set ylabel "HS/min (Transcension)"
 set autoscale
 set xrange [$xrange_beg:$xrange_end]
