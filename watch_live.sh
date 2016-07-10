@@ -11,10 +11,15 @@ plot_file=./live_plots/live_plot
 search_dir="/home/$USER/.macromedia/Flash_Player/#SharedObjects/"
 lso_name=accountSO.sol
 
-if (( $# > 0 )) && [[ -f $1 ]]; then
-    echo >&2 "Loading plot data from '$1'"
-    plot_data=$(sed -e '1,/^plot/d' -e '$ d' "$1")
+read_file=$1
+if (( $# > 0 )) && [[ -f $read_file ]]; then
+    echo >&2 "Loading plot data from '$read_file'"
+    plot_data=$(sed -e '1,/^plot/d' -e '$ d' "$read_file")
+elif (( $# == 0 )); then
+    echo >&2 "Usage: $0 <FILE>"
+    exit 1
 else
+    echo >&2 "Not a file: '$read_file'"
     plot_data=
 fi
 
@@ -37,6 +42,7 @@ backup_file() {
 
 backup_file "$plot_file"
 
+echo >&2 "Monitoring directory '$lso_dir' for changes to file '$lso'"
 ascensions=
 while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
     retries=0
