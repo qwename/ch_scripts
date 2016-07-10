@@ -37,12 +37,11 @@ done
 
 ##### Watch live statistics by reading the Flash cookie which updates every 30 seconds or so.
 
-Stats are written to the file "live_plot", and can be read again by the script by passing it as an argument.
+Stats are written to the supplied file argument, and can be read again by the script by passing it as an argument.
 
 The live_plot files are automatically copied to a timestamped file every ascension, or on script execution if an existing file is detected.
 
 ```
-./watch_live.sh
 ./watch_live.sh live_plot
 ```
 
@@ -59,7 +58,6 @@ Combine all live_plot files
 ```
 # Plot all live stats for transcension 2
 ./live_plot_combined 2 | gnuplot -p
-# Same as ./saves_plot.sh, 
 # Plot all live stats for transcension 2, ascension 3, starting xrange from 100
 ./live_plot_combined 2 3 100 | gnuplot -p
 ```
