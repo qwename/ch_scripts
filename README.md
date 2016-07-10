@@ -28,7 +28,7 @@
 for file in /your/dir/here; do
     ./get_stats "$file" 2>> stats_file
 done
-./saves_plot.sh | gnuplot -p
+./saves_plot.sh stats_file | gnuplot -p
 ```
 
 ##### Watch live statistics by reading the Flash cookie which updates every 30 seconds or so.

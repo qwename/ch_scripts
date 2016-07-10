@@ -28,7 +28,7 @@ LABELS=(Transcensions Ascensions 'Highest Zone Ever (HZE)'
 
 usage() {
     cat <<EOF
-Usage: $0 [TRANSCENSIONS] [XRANGE-BEG] [XRANGE-END]
+Usage: $0 <FILE> [TRANSCENSIONS] [XRANGE-BEG] [XRANGE-END]
 Outputs commands suitable for piping into gnuplot.
 TRANSCENSIONS can be a number to limit to viewing one transcension, or '*' for
 all transcensions.
@@ -36,14 +36,17 @@ XRANGE-BEG and XRANGE-END changes the x interval of the plot.
 EOF
 }
 
-if [[ $1 =~ ^((--)?help|-h)$ ]]; then
+if (( $# == 0 )) || [[ $1 =~ ^((--)?help|-h)$ ]]; then
     usage
     exit
 fi
 
-transcension=$1
-xrange_beg=$2
-xrange_end=$3
+file=$1
+[[ -f $file ]] || exit 1
+
+transcension=$2
+xrange_beg=$3
+xrange_end=$4
 
 if [[ $transcension =~ ^\*$ ]]; then
     transcension=
@@ -53,9 +56,6 @@ if [[ -n $transcension && \
     echo >&2 "Not a valid transcension number: '$transcension'"
     exit 1
 fi
-
-file=./stats_plot
-[[ -f $file ]] || exit 1
 
 regex="^[0-9]"
 if [[ -n $transcension ]]; then
