@@ -29,6 +29,10 @@ for file in /your/dir/here; do
     ./get_stats "$file" 2>> stats_file
 done
 ./saves_plot.sh stats_file | gnuplot -p
+# Specify any transcension, set xrange from 0 to 1000
+./saves_plot.sh stats_file \* 0 1000 | gnuplot -p
+# Plot transcension 3 only, starting xrange from 100
+./saves_plot.sh stats_file 3  100 | gnuplot -p
 ```
 
 ##### Watch live statistics by reading the Flash cookie which updates every 30 seconds or so.
@@ -52,4 +56,10 @@ Sample plots
 
 Combine all live_plot files
 
-``./live_plot_combined | gnuplot -p``
+```
+# Plot all live stats for transcension 2
+./live_plot_combined 2 | gnuplot -p
+# Same as ./saves_plot.sh, 
+# Plot all live stats for transcension 2, ascension 3, starting xrange from 100
+./live_plot_combined 2 3 100 | gnuplot -p
+```
