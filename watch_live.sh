@@ -9,6 +9,7 @@ stats_script=./get_stats.pl
 lso_script=./parse_accountSO.pl
 plot_file=./live_plots/live_plot
 search_dir="/home/$USER/.macromedia/Flash_Player/#SharedObjects/"
+site=kongregate
 lso_name=accountSO.sol
 
 read_file=$1
@@ -23,7 +24,8 @@ else
     plot_data=
 fi
 
-lso_file=$(find "$search_dir" -type f -name "$lso_name")
+lso_file=$(find "$search_dir" -type f -name "$lso_name" | grep "$site" |
+           head -n 1)
 if [[ -z $lso_file ]]; then
     echo >&2 "Failed to find Flash cookie '$lso_name' in '$search_dir'"
     exit 1
@@ -42,9 +44,9 @@ backup_file() {
 
 backup_file "$plot_file"
 
-echo >&2 "Monitoring directory '$lso_dir' for changes to file '$lso'"
+echo >&2 "Monitoring directory '$lso_dir' for changes to file '$lso_name'"
 ascensions=
-while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso ]]; do
+while [[ $(inotifywait -q -e moved_to "$lso_dir" --format "%f") =~ $lso_name ]]; do
     retries=0
     temp_data=
     while (( $retries < 3)); do
